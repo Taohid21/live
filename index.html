@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>tioTV - Unlimited Entertainment For Free 👌</title></title>
+    <title>tioTV | Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <style>
         body, html {
             margin: 0;
@@ -10,7 +11,7 @@
             height: 100%;
             overflow: hidden;
         }
-        #sF {
+        #c {
             width: 100vw;
             height: 100vh;
             border: none;
@@ -20,47 +21,51 @@
 </head>
 <body>
 
-<iframe id="sF" frameborder="0" allowfullscreen></iframe>
-
 <script>
-    const R_REF = "aHR0cHM6Ly90aW90di5uZXRsaWZ5LmFwcA==";
-    const F_URL = "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8=";
-    const H_ARRAY = [
+    const k = "aHR0cHM6Ly90aW90di5uZXRsaWZ5LmFwcA==";
+    const g = "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8=";
+    const e = [
         0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x74, 0x61, 0x6f, 0x68, 0x69, 0x64, 0x32, 0x31,
         0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x69, 0x6f, 0x54, 0x56, 0x2f
     ];
-
-    function dHA(h) {
+    
+    function d(h) {
         return String.fromCharCode(...h);
     }
 
-    function initSec() {
-        const dR = document.referrer;
-        const aR = atob(R_REF);
+    function s() {
+        const r = document.referrer;
+        const a = atob(k);
         
-        const isV = dR.startsWith(aR) || dR === "";
+        const i = r.startsWith(a) || r === "";
 
-        if (isV) {
-            const tUrl = dHA(H_ARRAY);
-            const frame = document.getElementById('sF');
+        if (i) {
+            const t = d(e);
             
-            frame.style.display = 'block';
-            frame.src = tUrl;
+            const i = document.createElement('iframe'); 
             
-            document.addEventListener('contextmenu', e => e.preventDefault());
-            document.addEventListener('keydown', e => {
-                if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
-                    e.preventDefault();
+            i.id = 'c';
+            i.src = t;
+            i.frameBorder = '0';
+            i.allowFullscreen = true;
+            i.style.display = 'block';
+
+            document.body.appendChild(i);
+
+            document.addEventListener('contextmenu', c => c.preventDefault());
+            document.addEventListener('keydown', c => {
+                if (c.keyCode === 123 || (c.ctrlKey && c.shiftKey && (c.keyCode === 73 || c.keyCode === 74)) || (c.ctrlKey && c.keyCode === 85)) {
+                    c.preventDefault();
                 }
             });
 
         } else {
-            const fUrl = atob(F_URL);
-            window.top.location.replace(fUrl);
+            const f = atob(g);
+            window.top.location.replace(f);
         }
     }
 
-    window.onload = initSec;
+    window.onload = s;
 </script>
 
 </body>
