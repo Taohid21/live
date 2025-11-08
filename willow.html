@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Willow Sports</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/controls.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: #000;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .shaka-video-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            object-fit: contain;
+        }
+
+        /* YouTube Theme CSS */
+        @font-face {
+          font-family: 'Roboto'; font-style: normal; font-weight: 400; font-display: swap;
+          src: url(https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Me5Q.ttf) format('truetype');
+        }
+        @font-face {
+          font-family: 'Roboto'; font-style: normal; font-weight: 500; font-display: swap;
+          src: url(https://fonts.gstatic.com/s/roboto/v27/KFOlCnqEu92Fr1MmEU9vAw.ttf) format('truetype');
+        }
+        .youtube-theme { font-family: 'Roboto', sans-serif; }
+        .youtube-theme .shaka-bottom-controls { width: 100%; padding: 0; z-index: 1; display: flex; flex-direction: column; }
+        .youtube-theme .shaka-controls-button-panel { order: 2; height: 40px; padding: 0 10px; }
+        .youtube-theme .shaka-range-container { margin: 4px 10px; top: 0; }
+        .youtube-theme .shaka-small-play-button { order: -3; }
+        .youtube-theme .shaka-mute-button { order: -2; }
+        .youtube-theme .shaka-controls-button-panel > * { margin: 0; padding: 3px 8px; color: #EEE; height: 40px; }
+        .youtube-theme .shaka-controls-button-panel .shaka-volume-bar-container { position: relative; z-index: 10; left: -1px; order: -1; opacity: 0; width: 0px; transition: width 0.2s cubic-bezier(0.4, 0, 1, 1); height: 3px; padding: 0; }
+        .youtube-theme .shaka-controls-button-panel .shaka-volume-bar-container:hover,
+        .youtube-theme .shaka-controls-button-panel .shaka-volume-bar-container:focus { display: block; width: 50px; opacity: 1; padding: 0 6px; }
+        .youtube-theme .shaka-mute-button:hover + div { opacity: 1; width: 50px; padding: 0 6px; }
+        .youtube-theme .shaka-current-time { padding: 0 10px; font-size: 12px; }
+        .youtube-theme .shaka-seek-bar-container { height: 3px; position: relative; top: -1px; margin-bottom: 0; }
+        .youtube-theme .shaka-seek-bar-container .shaka-range-element { opacity: 0; }
+        .youtube-theme .shaka-seek-bar-container:hover { height: 5px; top: 0; cursor: pointer; }
+        .youtube-theme .shaka-seek-bar-container:hover .shaka-range-element { opacity: 1; cursor: pointer; }
+        .youtube-theme .shaka-seek-bar-container input[type=range]::-webkit-slider-thumb { background: #FF0000; cursor: pointer; }
+        .youtube-theme .shaka-video-container .material-icons-round { font-family: 'Material Icons Sharp'; }
+        .shaka-spinner-container, .shaka-spinner, .shaka-spinner-svg { display: none !important; opacity: 0 !important; }
+        .youtube-theme .shaka-seek-bar { background: rgba(255,255,255,.2) !important; }
+        .youtube-theme .shaka-buffered-range { background: rgba(255,255,255,.4) !important; }
+        .youtube-theme .shaka-played-range { background: rgb(255,0,0) !important; }
+        #myLogo { width: 120px; height: 40px; position: absolute; right: 5px; top: 10px; z-index: 10; }
+    </style>
+</head>
+<body>
+
+<div class="shaka-video-container youtube-theme" data-shaka-player-container>
+    <!-- "muted" attribute নেই, তাই ভিডিওটি শব্দসহ শুরু হবে -->
+    <video autoplay playsinline id="video"></video>
+    <img id="myLogo" src="tiolive.png">
+</div>
+
+<script>
+    async function initPlayer() {
+        // --- নতুন ভিডিওর তথ্য এখানে আপডেট করা হয়েছে ---
+        const streamUrl = 'https://ottb.live.cf.ww.aiv-cdn.net/lhr-nitro/live/clients/dash/enc/y5gm3iemdd/out/v1/7b00f6441ea64bc28b3efb47e13bac4e/cenc.mpd';
+        const keyId = '24bab7ca9db8c6a3531a7b47a630b369';
+        const key = '687cde9605a93248d433df607b547836';
+        // ---------------------------------------------------
+
+        shaka.polyfill.installAll();
+        if (!shaka.Player.isBrowserSupported()) {
+            console.error('Browser not supported!');
+            return;
+        }
+
+        const video = document.getElementById('video');
+        const container = document.querySelector('.shaka-video-container');
+        const player = new shaka.Player(video);
+
+        const ui = new shaka.ui.Overlay(player, container, video);
+        
+        // কন্ট্রোল প্যানেল কনফিগারেশন
+        ui.configure({
+            'controlPanelElements': [
+                'play_pause', 
+                'time_and_duration', 
+                'mute', 
+                'volume', 
+                'spacer',
+                'captions', 
+                'language', // ভাষা বাটনটি বাইরে
+                'quality',  // সেটিংস (Quality) বাটনটি বাইরে
+                'overflow_menu'
+            ],
+            'overflowMenuButtons': [
+                'fullscreen' // শুধু ফুলস্ক্রিন বাটনটি মেনুর ভেতরে
+            ]
+        });
+
+        player.configure({
+            drm: {
+                clearKeys: {
+                    [keyId]: key
+                }
+            },
+            streaming: {
+                lowLatencyMode: true,
+                bufferingGoal: 20,
+                rebufferingGoal: 2
+            }
+        });
+
+        player.addEventListener('error', (event) => {
+            console.error('Shaka Player Error:', event.detail);
+        });
+
+        try {
+            await player.load(streamUrl);
+            console.log('Video loaded successfully!');
+            video.play();
+        } catch (error) {
+            console.error('Error loading video:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initPlayer);
+</script>
+
+</body>
+</html>
