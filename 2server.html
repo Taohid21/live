@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bangladesh Vs India</title>
+    <title>Bangladesh Vs Ireland</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.ui.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/controls.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp">
@@ -130,11 +130,19 @@
 <script>
     // --- চ্যানেলগুলোর তথ্য এখানে একটি অ্যারেতে রাখা হয়েছে ---
     const channels = [
-        
         {
-            name: 'Fancode',
-            url: 'https://bd-mc-fdlive.fancode.com/mumbai/137370_english_hls_f48e2ecbcb52142_1adfreeta-di_h264/index.m3u8',
-            drm: {} // এই লিঙ্কের জন্য কোনো কী লাগবে না, তাই এটি খালি
+            name: 'Fancode FHD',
+            url: 'https://a166aivottlinear-a.akamaihd.net/OTTB/sin-nitro/live/clients/dash/enc/inpyms8ezu/out/v1/1084d5c9a97a4c5b9f9554c88f486646/cenc.mpd',
+            drm: {
+                clearKeys: {
+                    '065051b99bf5cf8d9a3bde5cbde6aaf9': '214bd176832872339ce184338320f9a2'
+                }
+            }
+        },
+        {
+            name: 'Fancode HD',
+            url: 'https://bd-mc-fdlive.fancode.com/mumbai/138238_english_hls_3c279f8f2c90019_1ta-di_h264/index.m3u8',
+            drm: {}
         }
     ];
 
