@@ -61,10 +61,10 @@
             display: none !important;
         }
         .shaka-overflow-menu-button {
-    opacity: 0 !important;           /* বাটনটি সম্পূর্ণ স্বচ্ছ বা অদৃশ্য হয়ে যাবে */
-    pointer-events: none !important; /* অদৃশ্য বাটনে ক্লিক করা যাবে না */
-    cursor: default !important;      /* মাউস নিলেও হাত চিহ্ন আসবে না */
-}
+            opacity: 0 !important;
+            pointer-events: none !important;
+            cursor: default !important;
+        }
         .shaka-bottom-controls {
             padding-bottom: 5px;
         }
@@ -76,14 +76,16 @@
             text-shadow: 0 0 4px rgba(0,0,0,0.5);
         }
         #myLogo { 
-            width: 120px; 
-            height: auto; 
+            width: 15%;
+            max-width: 120px;
+            min-width: 80px;
+            height: auto;
             position: absolute; 
             right: 20px; 
             top: 20px; 
             z-index: 11;
             display: none;
-            transition: opacity 0.5s ease-in;
+            object-fit: contain;
         }
         .shaka-spinner-container { display: none !important; }
     </style>
@@ -120,7 +122,6 @@
                 'captions',
                 'quality',
                 'language',
-                'fullscreen',
                 'overflow_menu'
             ],
             'overflowMenuButtons': ['cast']
