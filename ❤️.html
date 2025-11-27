@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/controls.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp">
 <style>
+    /* --- Base Styles --- */
     * { margin: 0; padding: 0; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
     html, body {
         background: #000;
@@ -17,32 +18,34 @@
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
     
-    /* Video Container */
+    /* --- Video Container --- */
     .shaka-video-container {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
-        background: #000; /* Prevents white flash */
+        background: #000; /* Ensures black background during switch */
         display: flex;
         justify-content: center;
         align-items: center;
     }
     
+    /* Video Element: Force black background to stop white flash */
     video#video {
         width: 100%;
         height: 100%;
-        background: #000;
+        background: #000; 
+        object-fit: contain;
     }
 
-    /* --- Custom Loader (উন্নত মানের লোডার) --- */
+    /* --- Custom Loader (Fix: Visible above everything) --- */
     #custom-loader {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        z-index: 500;
-        display: none; /* JS will toggle this */
+        z-index: 2000; /* High z-index to stay on top */
+        display: none;
         pointer-events: none;
     }
     .loader-ring {
@@ -66,28 +69,26 @@
         100% { transform: rotate(360deg); }
     }
 
-    /* --- Logo Styles (লোগো ছোট এবং পজিশন ফিক্স) --- */
+    /* --- Logo Styles (Fix: Size increased & Positioning) --- */
     #myLogo {
-        width: 80px; /* লোগো ছোট করা হয়েছে */
-        max-width: 15vw; /* মোবাইলে রেসপন্সিভ */
+        width: 110px; /* লোগো একটু বড় করা হয়েছে */
+        max-width: 20vw;
         height: auto;
         position: absolute;
-        left: 15px; /* আরও বামে */
-        top: 15px;  /* আরও উপরে */
-        z-index: 11;
+        left: 20px;
+        top: 20px;
+        z-index: 15; /* লোডারের নিচে কিন্তু ভিডিওর উপরে */
         display: none;
         object-fit: contain;
         pointer-events: none;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-        transition: opacity 0.3s ease;
     }
 
-    /* --- Channel Switcher (ডান পাশে) --- */
+    /* --- Channel Switcher (Top Right) --- */
     #channelSwitcherContainer {
         position: absolute;
         top: 20px;
-        right: 20px; /* ডান পাশে নেওয়া হয়েছে */
-        left: auto;
+        right: 20px;
         z-index: 100;
     }
     
@@ -108,31 +109,21 @@
         gap: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    #currentChannelBtn:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.4);
-    }
     
     #channelList {
         list-style: none;
         padding: 5px;
         margin: 8px 0 0;
-        background: rgba(20, 20, 20, 0.9);
+        background: rgba(20, 20, 20, 0.95);
         backdrop-filter: blur(15px);
         border-radius: 8px;
         position: absolute;
-        right: 0; /* Align to right edge */
+        right: 0;
         min-width: 180px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         display: none;
         flex-direction: column;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        overflow: hidden;
-        animation: slideDown 0.2s ease-out;
-    }
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
     #channelList.show { display: flex; }
     
@@ -151,27 +142,24 @@
     }
     #channelList li.active {
         background: rgba(229, 9, 20, 0.2);
-        color: #e50914; /* Netflix Red style */
+        color: #e50914;
         font-weight: 700;
         border: 1px solid rgba(229, 9, 20, 0.3);
     }
 
-    /* --- Live Indicator --- */
+    /* --- Live Indicator (Fix: Aligned with controls) --- */
     .live-indicator {
         position: absolute;
-        bottom: 25px; /* Shaka controls এর উপরে */
-        left: 20px;
+        bottom: 10px; /* নিচে নামানো হয়েছে কন্ট্রোল বারের সাথে মিল রাখতে */
+        left: 15px;
         display: flex;
         align-items: center;
         font-weight: 700;
         color: #fff;
         font-size: 14px;
-        letter-spacing: 0.5px;
         z-index: 10;
         text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-        background: rgba(0,0,0,0.4);
-        padding: 4px 10px;
-        border-radius: 4px;
+        pointer-events: none;
     }
     .live-dot {
         width: 8px;
@@ -217,13 +205,25 @@
         pointer-events: none;
     }
 
-    /* --- Shaka Player Overrides --- */
+    /* --- Shaka Player Overrides (Fix: Hide Fullscreen Icon & Giant Play Button) --- */
     .shaka-seek-bar-container, .shaka-range-container, .shaka-current-time { display: none !important; }
     .shaka-overflow-menu-button { opacity: 0 !important; pointer-events: none !important; }
-    .shaka-bottom-controls { padding-bottom: 10px; }
+    .shaka-bottom-controls { padding-bottom: 5px; margin-left: 70px; /* লাইভ লেখার জন্য জায়গা */ }
     .shaka-controls-button-panel { background: transparent !important; }
-    .shaka-spinner-container { display: none !important; } /* Hide default spinner */
-    .shaka-fullscreen-button { margin-right: 15px !important; }
+    .shaka-spinner-container { display: none !important; } 
+    
+    /* Hide the Fullscreen button visually but keep structure if needed */
+    .shaka-fullscreen-button { 
+        opacity: 0 !important; 
+        pointer-events: none !important; 
+        width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Hide the Giant Play Button so custom loader is visible */
+    .shaka-giant-play-button-container {
+        display: none !important;
+    }
 </style>
 </head>
 <body>
@@ -231,7 +231,7 @@
 <div class="shaka-video-container" data-shaka-player-container>
     <video autoplay playsinline id="video" poster="https://res.cloudinary.com/dwgvvzbvn/image/upload/v1764246852/e8saiyn9cbebon6tnf5j.jpg"></video>
     
-    <!-- Custom Loader -->
+    <!-- Custom Loader (Now clearly visible) -->
     <div id="custom-loader">
         <div class="loader-ring"></div>
     </div>
@@ -291,7 +291,7 @@ onValue(ref(db, 'streamState'), (snapshot) => {
     const state = snapshot.val();
     if (state && state.active) {
         mainVideo.muted = true;
-        myLogo.style.display = 'none'; // Hide logo on overlay
+        myLogo.style.display = 'none'; // Only hide logo if OVERLAY is active
         liveIndicator.style.display = 'none';
         channelSwitcher.style.display = 'none';
         overlayContainer.style.display = 'flex';
@@ -319,9 +319,10 @@ onValue(ref(db, 'streamState'), (snapshot) => {
         overlayVid.src = "";
         mainVideo.muted = false;
 
-        // Logic handled by player events for logo
+        // Restore UI elements (Logo handled by player state)
         liveIndicator.style.display = 'flex';
         channelSwitcher.style.display = 'block';
+        if(!mainVideo.paused) myLogo.style.display = 'block';
     }
 });
 
@@ -355,7 +356,7 @@ const logo = document.getElementById('myLogo');
 function showLoader(show) {
     if(show) {
         loader.style.display = 'block';
-        logo.style.display = 'none'; // বাফারিং বা লোডিং হলে লোগো গায়েব
+        // Note: Logo stays Visible during buffer/loading as requested
     } else {
         loader.style.display = 'none';
     }
@@ -370,12 +371,12 @@ async function initPlayer() {
     player = new shaka.Player(video);
     const ui = new shaka.ui.Overlay(player, container, video);
 
+    // Removed 'fullscreen' from here to hide it
     ui.configure({
-        'controlPanelElements': ['spacer', 'captions', 'quality', 'language', 'fullscreen'],
+        'controlPanelElements': ['spacer', 'captions', 'quality', 'language'], // Fullscreen button removed
         'overflowMenuButtons': ['cast']
     });
 
-    // Smooth streaming config
     player.configure({
         streaming: { 
             lowLatencyMode: true, 
@@ -385,17 +386,13 @@ async function initPlayer() {
         }
     });
 
-    // --- EVENT LISTENERS FOR LOGO & LOADER ---
+    // --- EVENT LISTENERS ---
     
-    // বাফারিং হলে লোডার দেখাবে, লোগো লুকাবে
     player.addEventListener('buffering', (event) => {
-        showLoader(event.buffering); 
-        if(!event.buffering && !video.paused) {
-            logo.style.display = 'block'; // বাফারিং শেষ হলে লোগো দেখাও
-        }
+        showLoader(event.buffering);
+        // Logo logic removed from here so it stays
     });
 
-    // ভিডিও প্লে হলে লোগো দেখাবে
     video.addEventListener('playing', () => {
         showLoader(false);
         if(document.getElementById('overlay-container').style.display !== 'flex'){
@@ -403,7 +400,6 @@ async function initPlayer() {
         }
     });
 
-    // পজ বা লোডিং এর সময়
     video.addEventListener('waiting', () => showLoader(true));
     video.addEventListener('seeking', () => showLoader(true));
 
@@ -412,7 +408,6 @@ async function initPlayer() {
     const btnText = document.getElementById('btnText');
     const channelListEl = document.getElementById('channelList');
 
-    // Populate List
     channels.forEach((channel, index) => {
         const li = document.createElement('li');
         li.textContent = channel.name;
@@ -421,55 +416,47 @@ async function initPlayer() {
         channelListEl.appendChild(li);
     });
 
-    // Toggle Menu
     switcherBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         channelListEl.classList.toggle('show');
         showControls();
     });
 
-    // Handle Channel Selection
     channelListEl.addEventListener('click', async (event) => {
         if (event.target.tagName === 'LI') {
             const index = parseInt(event.target.dataset.index, 10);
             const selectedChannel = channels[index];
 
-            // UI Update
             btnText.textContent = selectedChannel.name;
             channelListEl.classList.remove('show');
             document.querySelectorAll('#channelList li').forEach(li => li.classList.remove('active'));
             event.target.classList.add('active');
 
-            // --- SMOOTH SWITCHING LOGIC ---
-            // 1. Show loader
+            // --- SMOOTH SWITCHING LOGIC (NO WHITE FLASH) ---
             showLoader(true);
-            // 2. Hide logo
-            logo.style.display = 'none';
-            // 3. Black background maintained by CSS on video container
-
+            // Don't hide logo here
+            
             try {
-                // Unload first to stop audio/video immediately
+                // Ensure black background
+                video.style.background = '#000';
                 await player.unload();
                 
                 player.configure({ drm: selectedChannel.drm });
                 await player.load(selectedChannel.url);
-                // Note: video.play() is handled by autoplay attribute usually, but good to ensure
                 video.play().catch(()=>{});
             } catch (e) {
-                console.error("Error switching channel", e);
+                console.error(e);
                 showLoader(false);
             }
         }
     });
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!switcherBtn.contains(e.target) && !channelListEl.contains(e.target)) {
             channelListEl.classList.remove('show');
         }
     });
 
-    // Initial Load
     showLoader(true);
     try {
         player.configure({ drm: channels[0].drm });
@@ -490,7 +477,7 @@ async function initPlayer() {
 
         clearTimeout(fadeTimeout);
         fadeTimeout = setTimeout(() => {
-            if (channelListEl.classList.contains('show')) return; // Don't hide if menu open
+            if (channelListEl.classList.contains('show')) return;
             uiElements.forEach(el => el.classList.add('fade-out'));
             container.style.cursor = 'none';
         }, 3000);
