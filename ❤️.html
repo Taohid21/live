@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Stream</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.ui.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/controls.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+background: #000;
+height: 100vh;
+width: 100vw;
+overflow: hidden;
+font-family: system-ui, -apple-system, sans-serif;
+}
+.shaka-video-container {
+position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+cursor: pointer;
+}
+video#video {
+width: 100%;
+height: 100%;
+background: #000;
+object-fit: contain;
+}
+#overlay-container {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: #000;
+z-index: 9999;
+display: none;
+justify-content: center;
+align-items: center;
+}
+#overlay-video, #overlay-image {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+.ui-element {
+opacity: 1;
+transition: opacity 0.5s ease-in-out;
+pointer-events: auto;
+}
+.ui-element.fade-out {
+opacity: 0;
+pointer-events: none;
+}
+.live-indicator {
+position: absolute;
+bottom: 12px;
+left: 24px;
+display: flex;
+align-items: center;
+font-weight: 700;
+color: #fff;
+font-size: 16px;
+z-index: 10;
+text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+.live-dot {
+width: 8px;
+height: 8px;
+background-color: #fff;
+border-radius: 50%;
+margin-right: 10px;
+box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+animation: live-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes live-pulse {
+0%, 100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.3; transform: scale(0.9); }
+}
+#channelSwitcherContainer {
+position: absolute;
+top: 10px;
+left: 140px;
+z-index: 100;
+}
+#currentChannelBtn {
+background-color: rgba(28, 28, 28, 0.8);
+color: #fff;
+border: 1px solid rgba(255, 255, 255, 0.3);
+border-radius: 4px;
+padding: 6px 12px;
+font-size: 14px;
+cursor: pointer;
+transition: background-color 0.2s;
+display: flex;
+align-items: center;
+gap: 5px;
+}
+#currentChannelBtn:hover {
+background-color: rgba(45, 45, 45, 0.9);
+}
+#channelList {
+list-style: none;
+padding: 5px 0;
+margin: 5px 0 0;
+background: rgba(28, 28, 28, 0.95);
+border-radius: 4px;
+position: absolute;
+min-width: 150px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+display: none;
+flex-direction: column;
+}
+#channelList.show {
+display: flex;
+}
+#channelList li {
+padding: 8px 12px;
+cursor: pointer;
+color: #eee;
+font-size: 13px;
+}
+#channelList li:hover {
+background: rgba(255, 255, 255, 0.2);
+}
+#channelList li.active {
+color: #ff0000;
+font-weight: bold;
+}
+.shaka-seek-bar-container, .shaka-range-container, .shaka-current-time { display: none !important; }
+.shaka-overflow-menu-button { opacity: 0 !important; pointer-events: none !important; }
+.shaka-bottom-controls { padding-bottom: 5px; }
+.shaka-controls-button-panel { background: transparent !important; }
+.shaka-spinner-container { display: none !important; }
+#myLogo {
+width: 120px;
+height: auto;
+position: absolute;
+left: 16px;
+top: 10px;
+z-index: 11;
+display: none;
+object-fit: contain;
+pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="shaka-video-container" data-shaka-player-container>
+<video autoplay playsinline id="video" poster="https://res.cloudinary.com/dwgvvzbvn/image/upload/v1764246852/e8saiyn9cbebon6tnf5j.jpg"></video>
+<img id="myLogo" src="tiolive.png">
+
+<div class="live-indicator ui-element" id="liveIndicator">
+    <div class="live-dot"></div> LIVE
+</div>
+
+<div id="channelSwitcherContainer" class="ui-element">
+    <button id="currentChannelBtn">Fancode FHD</button>
+    <ul id="channelList"></ul>
+</div>
+
+<div id="overlay-container">
+    <img id="overlay-image" style="display:none;">
+    <video id="overlay-video" style="display:none;" playsinline></video>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyAb8YsPMOY53GxiycCL6G0MPZdgWe3nnyY",
+authDomain: "movie-92659.firebaseapp.com",
+databaseURL: "https://movie-92659-default-rtdb.firebaseio.com",
+projectId: "movie-92659",
+storageBucket: "movie-92659.firebasestorage.app",
+messagingSenderId: "1090734362509",
+appId: "1:1090734362509:web:86be5583f6e8fcfdfa77c4",
+measurementId: "G-XF1TEP0DSJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const mainVideo = document.getElementById('video');
+const overlayContainer = document.getElementById('overlay-container');
+const overlayImg = document.getElementById('overlay-image');
+const overlayVid = document.getElementById('overlay-video');
+const myLogo = document.getElementById('myLogo');
+const liveIndicator = document.getElementById('liveIndicator');
+const channelSwitcher = document.getElementById('channelSwitcherContainer');
+
+onValue(ref(db, 'streamState'), (snapshot) => {
+const state = snapshot.val();
+if (state && state.active) {
+mainVideo.muted = true;
+myLogo.style.display = 'none';
+liveIndicator.style.display = 'none';
+channelSwitcher.style.display = 'none';
+overlayContainer.style.display = 'flex';
+
+if (state.type === 'image') {
+overlayVid.style.display = 'none';
+overlayVid.pause();
+overlayImg.src = state.src;
+overlayImg.style.display = 'block';
+} else if (state.type === 'video') {
+overlayImg.style.display = 'none';
+if (overlayVid.src !== state.src) {
+overlayVid.src = state.src;
+overlayVid.style.display = 'block';
+overlayVid.load();
+overlayVid.play().catch(e => {});
+} else if (overlayVid.paused) {
+overlayVid.style.display = 'block';
+overlayVid.play();
+}
+}
+} else {
+overlayContainer.style.display = 'none';
+overlayVid.pause();
+overlayVid.src = "";
+mainVideo.muted = false;
+
+if(!mainVideo.paused) myLogo.style.display = 'block';
+liveIndicator.style.display = 'flex';
+channelSwitcher.style.display = 'block';
+}
+});
+
+overlayVid.addEventListener('ended', () => {
+update(ref(db, 'streamState'), { active: false });
+});
+</script>
+
+<script>
+const channels = [
+{
+name: 'Fancode FHD',
+url: 'https://a166aivottlinear-a.akamaihd.net/OTTB/sin-nitro/live/clients/dash/enc/fdb3pubmek/out/v1/aefca6420f944a9482e117f315de535f/cenc.mpd',
+drm: {
+clearKeys: {
+'7e9239c1982d984a002df3ed049d0756': '1b8a17598129a3618535c8fb05f103fe'
+}
+}
+},
+{
+name: 'Fancode HD',
+url: 'https://bd-mc-fdlive.fancode.com/mumbai/138239_english_hls_eb5430a5c152122_1ta-di_h264/index.m3u8',
+drm: {}
+}
+];
+
+let player;
+
+async function initPlayer() {
+shaka.polyfill.installAll();
+if (!shaka.Player.isBrowserSupported()) return;
+
+const video = document.getElementById('video');
+const container = document.querySelector('.shaka-video-container');
+player = new shaka.Player(video);
+const ui = new shaka.ui.Overlay(player, container, video);
+
+ui.configure({
+'controlPanelElements': ['spacer', 'captions', 'quality', 'language', 'overflow_menu'],
+'overflowMenuButtons': ['cast']
+});
+
+player.configure({
+streaming: { lowLatencyMode: true, bufferingGoal: 20, rebufferingGoal: 2 }
+});
+
+video.addEventListener('playing', () => {
+if(document.getElementById('overlay-container').style.display !== 'flex'){
+document.getElementById('myLogo').style.display = 'block';
+}
+});
+
+const switcherBtn = document.getElementById('currentChannelBtn');
+const channelListEl = document.getElementById('channelList');
+
+channels.forEach((channel, index) => {
+const li = document.createElement('li');
+li.textContent = channel.name;
+li.dataset.index = index;
+if(index === 0) li.classList.add('active');
+channelListEl.appendChild(li);
+});
+
+switcherBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+channelListEl.classList.toggle('show');
+showControls();
+});
+
+channelListEl.addEventListener('click', async (event) => {
+if (event.target.tagName === 'LI') {
+const index = parseInt(event.target.dataset.index, 10);
+const selectedChannel = channels[index];
+
+switcherBtn.textContent = selectedChannel.name;
+channelListEl.classList.remove('show');
+
+document.querySelectorAll('#channelList li').forEach(li => li.classList.remove('active'));
+event.target.classList.add('active');
+
+try {
+player.configure({ drm: selectedChannel.drm });
+await player.load(selectedChannel.url);
+} catch (e) {}
+}
+});
+
+document.addEventListener('click', (e) => {
+if (!switcherBtn.contains(e.target) && !channelListEl.contains(e.target)) {
+channelListEl.classList.remove('show');
+}
+});
+
+try {
+player.configure({ drm: channels[0].drm });
+await player.load(channels[0].url);
+} catch (e) {}
+
+const uiElements = document.querySelectorAll('.ui-element');
+let fadeTimeout;
+
+function showControls() {
+if(document.getElementById('overlay-container').style.display === 'flex') return;
+
+uiElements.forEach(el => el.classList.remove('fade-out'));
+clearTimeout(fadeTimeout);
+fadeTimeout = setTimeout(() => {
+if (channelListEl.classList.contains('show')) return;
+uiElements.forEach(el => el.classList.add('fade-out'));
+}, 3000);
+}
+
+container.addEventListener('mousemove', showControls);
+container.addEventListener('touchstart', showControls);
+container.addEventListener('click', showControls);
+showControls();
+}
+
+document.addEventListener('DOMContentLoaded', initPlayer);
+</script>
+
+</body>
+</html>
