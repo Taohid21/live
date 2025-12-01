@@ -3,283 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Stream</title>
+    <title>Live Stream - TV Mode</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.ui.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/controls.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp">
+    <!-- Sporty Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
-            background: #000;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-        .shaka-video-container {
+        body { background: #000; overflow: hidden; font-family: 'Chakra Petch', sans-serif; }
+        .shaka-video-container { position: absolute; inset: 0; width: 100%; height: 100%; }
+        video#video { width: 100%; height: 100%; object-fit: contain; }
+
+        /* --- TV GRAPHICS LAYER (LOWER THIRDS) --- */
+        #tv-graphics-layer {
             position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-        video#video {
-            width: 100%;
-            height: 100%;
-            background: #000;
-            object-fit: contain;
-        }
-        
-        /* --- OVERLAY SYSTEM STYLES --- */
-        #overlay-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 9999; /* সবার উপরে থাকবে */
-            display: none; /* ডিফল্ট হাইড */
+            bottom: 60px; /* প্লেয়ার কন্ট্রোলের একটু উপরে */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            z-index: 50;
+            pointer-events: none;
+            display: flex;
             justify-content: center;
-            align-items: center;
-        }
-        #overlay-video, #overlay-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            perspective: 1000px;
         }
 
-        /* লাইভ ইন্ডিকেটর স্টাইল */
-        .live-indicator {
-            position: absolute;
-            bottom: 12px;
-            left: 24px;
+        .graphic-box {
+            background: linear-gradient(90deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            border-left: 5px solid #ff0055;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
-            font-weight: 700;
-            color: #fff;
-            font-size: 16px;
-            z-index: 10;
-            pointer-events: none;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
-            opacity: 1;
-            transition: opacity 0.5s ease-in-out;
+            gap: 15px;
+            opacity: 0;
+            transform: translateY(100px) skewX(-10deg);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .live-indicator.fade-out { opacity: 0; }
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #fff;
-            border-radius: 50%;
-            margin-right: 10px;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-            animation: live-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes live-pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.3; transform: scale(0.9); }
-        }
-        
-        /* Shaka UI cleanups */
-        .shaka-seek-bar-container, .shaka-range-container, .shaka-current-time { display: none !important; }
-        .shaka-overflow-menu-button { opacity: 0 !important; pointer-events: none !important; }
-        .shaka-bottom-controls { padding-bottom: 5px; }
-        .shaka-controls-button-panel { background: transparent !important; }
-        .shaka-spinner-container { display: none !important; }
 
-        #myLogo { 
-            width: 15%;
-            max-width: 120px;
-            min-width: 80px;
-            height: auto;
-            position: absolute; 
-            left: 16px; 
-            top: 6px; 
-            z-index: 11;
-            display: none;
-            object-fit: contain;
+        /* Active State Animation */
+        .graphic-box.active {
+            opacity: 1;
+            transform: translateY(0) skewX(-10deg);
         }
+
+        .graphic-logo {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            transform: skewX(10deg); /* Text সোজা রাখার জন্য */
+        }
+
+        .graphic-content {
+            display: flex;
+            flex-direction: column;
+            transform: skewX(10deg); /* Text সোজা রাখার জন্য */
+        }
+
+        .graphic-title {
+            font-size: 14px;
+            color: #ffb347;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .graphic-text {
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Style Variants */
+        .style-score { border-color: #00d2ff; background: linear-gradient(90deg, #000428, #004e92); }
+        .style-alert { border-color: #ff0000; background: linear-gradient(90deg, #4b0202, #960909); }
+        .style-info  { border-color: #ffd700; background: linear-gradient(90deg, #1c1c1c, #383838); }
+
+        /* Shaka UI Cleanups */
+        .shaka-overflow-menu-button, .shaka-current-time { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="shaka-video-container" data-shaka-player-container>
-    <!-- Main Live Stream -->
-    <video autoplay playsinline id="video" poster="https://d34080pnh6e62j.cloudfront.net/images/channels/ChannelFeaturedAppthumb/1764058157540x302.jpg"></video>
-    
-    <!-- Logo -->
-    <img id="myLogo" src="tiolive.png">
-    
-    <!-- Live Indicator -->
-    <div class="live-indicator" id="liveIndicator">
-        <div class="live-dot"></div> LIVE
-    </div>
+    <video autoplay playsinline id="video"></video>
 
-    <!-- NEW: Overlay Layer (For Ads/Images) -->
-    <div id="overlay-container">
-        <img id="overlay-image" style="display:none;">
-        <video id="overlay-video" style="display:none;" playsinline></video>
+    <!-- TV GRAPHICS CONTAINER -->
+    <div id="tv-graphics-layer">
+        <!-- Content will be injected here via JS -->
+        <div id="live-graphic" class="graphic-box">
+            <div class="graphic-logo">LIVE</div>
+            <div class="graphic-content">
+                <span class="graphic-title" id="g-title">WAITING FOR DATA...</span>
+                <span class="graphic-text" id="g-text">CONNECTED</span>
+            </div>
+        </div>
     </div>
 </div>
 
 <script type="module">
-    // --- FIREBASE INTEGRATION START ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // ঠিক একই কনফিগ ব্যবহার করবেন যা Admin Panel এ করেছেন
+    // আপনার কনফিগ
     const firebaseConfig = {
-  apiKey: "AIzaSyAb8YsPMOY53GxiycCL6G0MPZdgWe3nnyY",
-  authDomain: "movie-92659.firebaseapp.com",
-  databaseURL: "https://movie-92659-default-rtdb.firebaseio.com",
-  projectId: "movie-92659",
-  storageBucket: "movie-92659.firebasestorage.app",
-  messagingSenderId: "1090734362509",
-  appId: "1:1090734362509:web:86be5583f6e8fcfdfa77c4",
-  measurementId: "G-XF1TEP0DSJ"
-};
+        apiKey: "AIzaSyAb8YsPMOY53GxiycCL6G0MPZdgWe3nnyY",
+        authDomain: "movie-92659.firebaseapp.com",
+        databaseURL: "https://movie-92659-default-rtdb.firebaseio.com",
+        projectId: "movie-92659",
+        storageBucket: "movie-92659.firebasestorage.app",
+        messagingSenderId: "1090734362509",
+        appId: "1:1090734362509:web:86be5583f6e8fcfdfa77c4",
+        measurementId: "G-XF1TEP0DSJ"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Elements
-    const mainVideo = document.getElementById('video');
-    const overlayContainer = document.getElementById('overlay-container');
-    const overlayImg = document.getElementById('overlay-image');
-    const overlayVid = document.getElementById('overlay-video');
-    const myLogo = document.getElementById('myLogo');
-    const liveIndicator = document.getElementById('liveIndicator');
+    const graphicBox = document.getElementById('live-graphic');
+    const gTitle = document.getElementById('g-title');
+    const gText = document.getElementById('g-text');
 
-    // Firebase Listener
-    onValue(ref(db, 'streamState'), (snapshot) => {
-        const state = snapshot.val();
+    // Firebase Listener for Graphics
+    onValue(ref(db, 'tvGraphics'), (snapshot) => {
+        const data = snapshot.val();
 
-        if (state && state.active) {
-            // --- MODE: OVERLAY ACTIVE (AD BREAK) ---
+        if (data && data.show) {
+            // 1. Update Content
+            gTitle.innerText = data.line1;
+            gText.innerText = data.line2;
             
-            // 1. Mute Main Stream (but keep it playing)
-            mainVideo.muted = true;
-            
-            // 2. Hide UI Elements
-            myLogo.style.display = 'none';
-            liveIndicator.style.display = 'none'; // Hide LIVE tag during ad
-
-            // 3. Show Overlay Container
-            overlayContainer.style.display = 'flex';
-
-            // 4. Display Content based on Type
-            if (state.type === 'image') {
-                overlayVid.style.display = 'none';
-                overlayVid.pause();
-                
-                overlayImg.src = state.src;
-                overlayImg.style.display = 'block';
-            } 
-            else if (state.type === 'video') {
-                overlayImg.style.display = 'none';
-                
-                // Only load/play if source changed or not playing
-                if (overlayVid.src !== state.src) {
-                    overlayVid.src = state.src;
-                    overlayVid.style.display = 'block';
-                    overlayVid.load();
-                    overlayVid.play().catch(e => console.log("Autoplay blocked", e));
-                } else if (overlayVid.paused) {
-                    overlayVid.style.display = 'block';
-                    overlayVid.play();
-                }
-            }
+            // 2. Set Style Class
+            graphicBox.className = 'graphic-box active'; // Reset
+            if (data.type === 'score') graphicBox.classList.add('style-score');
+            else if (data.type === 'alert') graphicBox.classList.add('style-alert');
+            else graphicBox.classList.add('style-info');
 
         } else {
-            // --- MODE: NORMAL STREAM ---
-            
-            // 1. Hide Overlay
-            overlayContainer.style.display = 'none';
-            overlayVid.pause();
-            overlayVid.src = ""; // Stop buffering overlay
-            
-            // 2. Unmute Main Stream
-            mainVideo.muted = false;
-            
-            // 3. Show UI Elements
-            // (শাকা প্লেয়ারের 'playing' ইভেন্ট অনুযায়ী লোগো দেখাবে, তবুও আমরা ফোর্স শো করছি যদি ভিডিও চলে)
-            if(!mainVideo.paused) {
-                myLogo.style.display = 'block';
-            }
-            liveIndicator.style.display = 'flex';
+            // Hide Graphic
+            graphicBox.classList.remove('active');
         }
     });
 
-    // Logic: When overlay video ends, automatically go back to live stream
-    overlayVid.addEventListener('ended', () => {
-        // আপডেট: শুধু নিজের জন্য বন্ধ না করে, ডাটাবেস আপডেট করুন যাতে সবার জন্য বন্ধ হয়ে যায়
-        update(ref(db, 'streamState'), {
-            active: false
-        });
-    });
-    // --- FIREBASE INTEGRATION END ---
-</script>
-
-<script>
-    // --- EXISTING SHAKA PLAYER LOGIC ---
-    async function initPlayer() {
-        const streamUrl = 'https://a166aivottlinear-a.akamaihd.net/OTTB/sin-nitro/live/clients/dash/enc/inpyms8ezu/out/v1/1084d5c9a97a4c5b9f9554c88f486646/cenc.mpd';
-        const keyId = '065051b99bf5cf8d9a3bde5cbde6aaf9';
-        const key = '214bd176832872339ce184338320f9a2';
-
-        shaka.polyfill.installAll();
-        if (!shaka.Player.isBrowserSupported()) return;
-
+    // Shaka Player Init (Simple Version)
+    async function init() {
         const video = document.getElementById('video');
-        const container = document.querySelector('.shaka-video-container');
-        const player = new shaka.Player(video);
-        const ui = new shaka.ui.Overlay(player, container, video);
-
-        ui.configure({
-            'controlPanelElements': ['spacer', 'captions', 'quality', 'language', 'overflow_menu'],
-            'overflowMenuButtons': ['cast']
-        });
-
+        const ui = video['ui'];
+        const controls = ui.getControls();
+        const player = controls.getPlayer();
+        // আপনার ভিডিও লিঙ্ক
+        const streamUrl = 'https://a166aivottlinear-a.akamaihd.net/OTTB/sin-nitro/live/clients/dash/enc/inpyms8ezu/out/v1/1084d5c9a97a4c5b9f9554c88f486646/cenc.mpd';
+        
         player.configure({
-            drm: { clearKeys: { [keyId]: key } },
-            streaming: { lowLatencyMode: true, bufferingGoal: 20, rebufferingGoal: 2 }
-        });
-
-        video.addEventListener('playing', () => {
-            // Check if overlay is active via CSS check before showing logo
-            if(document.getElementById('overlay-container').style.display !== 'flex'){
-                document.getElementById('myLogo').style.display = 'block';
-            }
+            drm: { clearKeys: { '065051b99bf5cf8d9a3bde5cbde6aaf9': '214bd176832872339ce184338320f9a2' } }
         });
 
         try {
             await player.load(streamUrl);
-            video.play();
-        } catch (error) {}
-
-        // Auto-hide logic for controls
-        const liveIndicator = document.getElementById('liveIndicator');
-        let fadeTimeout;
-
-        function showControls() {
-            // ডোন্ট শো ইফ ওভারলে ইজ এক্টিভ
-            if(document.getElementById('overlay-container').style.display === 'flex') return;
-
-            liveIndicator.classList.remove('fade-out');
-            clearTimeout(fadeTimeout);
-            fadeTimeout = setTimeout(() => {
-                liveIndicator.classList.add('fade-out');
-            }, 3000);
-        }
-
-        showControls();
-        container.addEventListener('mousemove', showControls);
-        container.addEventListener('touchstart', showControls);
-        container.addEventListener('click', showControls);
+        } catch (e) { console.error(e); }
     }
-
-    document.addEventListener('DOMContentLoaded', initPlayer);
+    document.addEventListener('shaka-ui-loaded', init);
 </script>
-
 </body>
 </html>
