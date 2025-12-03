@@ -204,9 +204,10 @@
 
 <script>
     async function initPlayer() {
-        const streamUrl = 'https://otte.live.fly.ww.aiv-cdn.net/lhr-nitro/live/dash/enc/j8mntrh22y/out/v1/5750d1cc17f5426093f94a461a239dd2/cenc.mpd';
-const keyId = '83fd44762766d1db4e1894322785e8bc';
-const key = '2d698dd72747f6174ef57d2e87c7a4bb';
+        const streamUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://otte.live.fly.ww.aiv-cdn.net/lhr-nitro/live/dash/enc/j8mntrh22y/out/v1/5750d1cc17f5426093f94a461a239dd2/cenc.mpd');
+        const keyId = '83fd44762766d1db4e1894322785e8bc';
+        const key = '2d698dd72747f6174ef57d2e87c7a4bb';
+
         shaka.polyfill.installAll();
         if (!shaka.Player.isBrowserSupported()) return;
 
